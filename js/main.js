@@ -381,6 +381,30 @@ const keys = {};
 const fly = { yaw: 0, pitch: 0, speed: 4, drag: false, lx: 0, ly: 0 };
 const freeBtn = document.getElementById('free');
 const freeHint = document.getElementById('freeHint');
+const orbitHint = document.getElementById('orbitHint');
+const cameraButtons = [...document.querySelectorAll('[data-camera]')];
+const cameraSteps = {
+  left: [-0.2, 0, 1], right: [0.2, 0, 1], up: [0, -0.2, 1], down: [0, 0.2, 1],
+  in: [0, 0, 0.8], out: [0, 0, 1.25],
+};
+for (const button of cameraButtons) {
+  button.onclick = () => {
+    anim = null;
+    const [azimuth, elevation, zoom] = cameraSteps[button.dataset.camera];
+    const offset = camera.position.clone().sub(controls.target);
+    const orbit = new THREE.Spherical().setFromVector3(offset);
+    orbit.theta += azimuth;
+    orbit.phi += elevation;
+    orbit.makeSafe();
+    orbit.radius = THREE.MathUtils.clamp(orbit.radius * zoom, 0.25, camera.far * 0.8);
+    camera.position.copy(controls.target).add(offset.setFromSpherical(orbit));
+    controls.update();
+  };
+}
+document.getElementById('camera-reset').onclick = () => {
+  const shotId = shotBar.querySelector('.on').dataset.id;
+  goShot(SHOTS.find(({ id }) => id === shotId));
+};
 function setFree(on) {
   freeCam = on;
   controls.enabled = !on;
@@ -394,7 +418,9 @@ function setFree(on) {
   }
   freeBtn.classList.toggle('on', on);
   freeBtn.setAttribute('aria-pressed', String(on));
-  freeHint.style.display = on ? 'block' : 'none';
+  freeHint.hidden = !on;
+  orbitHint.hidden = on;
+  cameraButtons.forEach((button) => { button.disabled = on; });
 }
 freeBtn.onclick = () => setFree(!freeCam);
 addEventListener('keydown', (e) => {

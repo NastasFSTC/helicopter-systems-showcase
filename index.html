@@ -63,8 +63,13 @@
   input[type=range] { width: 94px; margin: 0; }
   #speedOut { min-width: 4ch; color: var(--ink); font-variant-numeric: tabular-nums; }
   .toggle { min-height: 36px; cursor: pointer; }
-  #freeHint { display: none; position: absolute; top: 8px; left: 8px; right: 8px; width: fit-content; max-width: calc(100% - 16px); background: var(--background); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 12px; pointer-events: none; }
-  #freeHint b, #freeHint strong { color: var(--accent); }
+  .navigation[open] { width: min(370px, calc(100vw - 28px)); }
+  .navigation-content { display: grid; gap: 8px; padding: 8px; max-height: min(190px, 35dvh); overflow: auto; }
+  .camera-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+  .camera-actions button { min-width: 34px; padding-inline: 7px; }
+  .camera-actions button:disabled { opacity: .45; cursor: default; }
+  .camera-help { color: var(--muted); font-size: 12px; }
+  #freeHint b { color: var(--accent); }
   kbd { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font: 11px system-ui, sans-serif; }
   body { overflow: hidden; }
   #app { position: fixed; }
@@ -127,7 +132,6 @@
   .briefing > summary { padding-block: 5px; }
   #caption { padding: 10px 12px; color: var(--muted); }
   .toolbar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; padding: 7px; }
-  #freeHint { position: fixed; top: auto; bottom: var(--footer-space, 100px); left: 50%; right: auto; transform: translateX(-50%); width: min(540px, calc(100% - 28px)); }
   @media (max-width: 850px) {
     .topbar { padding-inline: 10px; }
     .view-heading { top: calc(var(--heading-top, 80px) + 43px); left: 50%; width: calc(100% - 24px); }
@@ -216,18 +220,31 @@
   <section class="viewer" aria-labelledby="title">
     <div id="app"></div>
     <header class="view-heading"><h1 id="title">Helicopter Drive System</h1><p id="subtitle"></p></header>
-    <div id="freeHint"><strong>Free camera</strong> · Drag to look · Hold right mouse button to move forward or middle to move back · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move ·
-      <kbd>E</kbd>/<kbd>Q</kbd> up/down · <kbd>Shift</kbd> fast · wheel: speed <b>4.0</b> · <kbd>F</kbd> exit<br>
-      🎮 controller: left stick move · right stick look · RT/LT up/down · RB/LB speed · A boost · Y exit</div>
     <div class="bottom-hud">
       <details class="briefing hud-panel">
         <summary>View briefing</summary>
         <p id="caption"></p>
       </details>
+      <details class="navigation hud-panel">
+        <summary>Navigation</summary>
+        <div class="navigation-content">
+          <div class="camera-actions" role="group" aria-label="Camera navigation">
+            <button data-camera="left" aria-label="Orbit left" title="Orbit left">←</button>
+            <button data-camera="right" aria-label="Orbit right" title="Orbit right">→</button>
+            <button data-camera="up" aria-label="Orbit up" title="Orbit up">↑</button>
+            <button data-camera="down" aria-label="Orbit down" title="Orbit down">↓</button>
+            <button data-camera="in" aria-label="Zoom in" title="Zoom in">+</button>
+            <button data-camera="out" aria-label="Zoom out" title="Zoom out">−</button>
+            <button id="camera-reset">Reset view</button>
+            <button id="free" title="Free camera (F)" aria-pressed="false">Free camera</button>
+          </div>
+          <p id="orbitHint" class="camera-help">Drag to orbit. Right-drag to pan. Scroll or pinch to zoom.</p>
+          <p id="freeHint" class="camera-help" hidden>Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move. <kbd>E</kbd>/<kbd>Q</kbd> up/down. <kbd>Shift</kbd> boost. Scroll changes speed (<b>4.0</b>). Hold right mouse to move forward or middle to move back. <kbd>F</kbd> exits free camera.<br>Gamepad: left stick moves, right stick looks, RT/LT rises or descends, RB/LB sets speed, A boosts, Y exits.</p>
+        </div>
+      </details>
       <div class="toolbar hud-panel" role="group" aria-label="Model controls">
         <button id="play">❚❚ Pause</button>
         <label class="speed">Playback <input id="speed" type="range" min="-2" max="4" step="0.25" value="0"> <output id="speedOut" for="speed"></output></label>
-        <button id="free" title="Free camera (F)" aria-pressed="false">Free camera</button>
         <label class="toggle"><input id="lbls" type="checkbox"> Labels</label>
       </div>
     </div>
