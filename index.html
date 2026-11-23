@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helicopter Systems | Nastas FSTC</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --background: #001620;
+    --surface: #08232e;
+    --line: #244652;
+    --ink: #eef7fa;
+    --muted: #aac2cb;
+    --accent: #68e4d4;
+    --warning: #ffaca2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--ink);
+    font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+  }
+  h1, h2, p { margin: 0; }
+  h2 { font-size: 14px; font-weight: 650; }
+  .identity { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .wordmark { font-weight: 750; letter-spacing: .13em; white-space: nowrap; }
+  .wordmark b { color: var(--accent); }
+  .product { color: var(--muted); border-left: 1px solid var(--line); padding-left: 12px; }
+  #acSel { display: flex; gap: 4px; background: var(--surface); padding: 4px; border: 1px solid var(--line); border-radius: 9px; }
+  #acSel button { border-color: transparent; background: transparent; }
+  #acSel button.on { background: var(--accent); color: var(--background); }
+  #shots { display: grid; gap: 4px; }
+  button {
+    min-height: 36px;
+    padding: 6px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button:hover, #acSel button:hover { background: #193d49; }
+  button.on, #shots button.on { color: var(--accent); border-color: #3d9b93; background: #103c42; font-weight: 650; }
+  button.off { color: var(--warning); border-color: #95625f; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #shots button { text-align: left; background: transparent; border-color: transparent; }
+  #shots button:hover { background: #193d49; }
+  #title { font-size: clamp(21px, 2.3vw, 34px); line-height: 1.15; letter-spacing: -.025em; }
+  #subtitle { color: var(--muted); margin-top: 5px; }
+  #app { position: absolute; inset: 0; overflow: hidden; }
+  #app canvas { display: block; cursor: grab; touch-action: none; }
+  #app canvas:active { cursor: grabbing; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; transform: translate(50%, 0); }
+  .lbl .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--background); }
+  .lbl .txt { background: var(--background); border: 1px solid var(--line); padding: 2px 7px; border-radius: 5px; }
+  label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  input { accent-color: var(--accent); }
+  input[type=range] { width: 94px; margin: 0; }
+  #speedOut { min-width: 4ch; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .toggle { min-height: 36px; cursor: pointer; }
+  #freeHint { display: none; position: absolute; top: 8px; left: 8px; right: 8px; width: fit-content; max-width: calc(100% - 16px); background: var(--background); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 12px; pointer-events: none; }
+  #freeHint b, #freeHint strong { color: var(--accent); }
+  kbd { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font: 11px system-ui, sans-serif; }
+  body { overflow: hidden; }
+  #app { position: fixed; }
+  .workspace, .viewer { pointer-events: none; }
+  .viewer #app { pointer-events: auto; }
+  .topbar {
+    position: fixed;
+    z-index: 2;
+    inset: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    padding: 10px 18px;
+    background: var(--background);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .view-heading {
+    position: fixed;
+    top: var(--heading-top, 80px);
+    left: calc(50% - 58px);
+    transform: translateX(-50%);
+    width: min(calc(100vw - 500px), 680px);
+    text-align: center;
+    text-shadow: 0 2px 8px var(--background), 0 0 16px var(--background);
+  }
+  .hud-panel {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(0, 22, 32, .92);
+    pointer-events: auto;
+  }
+  .hud-panel > summary { padding: 9px 12px; cursor: pointer; font-weight: 650; }
+  .hud-panel > summary:hover { color: var(--accent); }
+  .hud-panel[open] > summary { border-bottom: 1px solid var(--line); }
+  .views {
+    position: fixed;
+    z-index: 1;
+    top: var(--heading-top, 80px);
+    max-height: calc(100dvh - var(--heading-top, 80px) - var(--footer-space, 100px));
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .views { left: 18px; width: 166px; }
+  #shots { padding: 6px; }
+  .bottom-hud {
+    position: fixed;
+    left: 50%;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 28px);
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+  }
+  .briefing { max-width: min(100%, 600px); }
+  .briefing > summary { padding-block: 5px; }
+  #caption { padding: 10px 12px; color: var(--muted); }
+  .toolbar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; padding: 7px; }
+  #freeHint { position: fixed; top: auto; bottom: var(--footer-space, 100px); left: 50%; right: auto; transform: translateX(-50%); width: min(540px, calc(100% - 28px)); }
+  @media (max-width: 850px) {
+    .topbar { padding-inline: 10px; }
+    .view-heading { top: calc(var(--heading-top, 80px) + 43px); left: 50%; width: calc(100% - 24px); }
+    .views { width: auto; max-width: calc(100vw - 20px); }
+    .views { left: 10px; }
+    .views[open] { width: 166px; }
+    .views > summary { font-size: 12px; }
+  }
+  @media (max-width: 460px) {
+    .topbar button { font-size: 12px; padding-inline: 7px; }
+    .top-controls { gap: 5px; }
+    .toolbar { gap: 4px 8px; }
+  }
+.flight-hud {
+    position: fixed;
+    right: 18px;
+    bottom: var(--footer-space, 100px);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    width: min(290px, calc(100vw - 20px));
+    padding: 10px;
+  }
+  .flight-axis { display: grid; align-content: center; justify-items: center; gap: 4px; font-size: 12px; }
+  #pad { display: block; width: 86px; height: 86px; border-radius: 50%; background: var(--background); cursor: crosshair; touch-action: none; }
+  .flight-sliders { display: grid; align-items: center; gap: 3px; font-size: 12px; }
+  .flight-sliders label { justify-content: space-between; }
+  .flight-sliders input { width: 100%; min-height: 22px; }
+  .flight-sliders output, #pip-value { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .flight-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
+  .flight-actions button { min-height: 30px; padding-block: 3px; }
+  .flight-actions .toggle { min-height: 30px; font-size: 12px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+  #pip {
+    position: fixed;
+    top: var(--heading-top, 80px);
+    right: 18px;
+    z-index: 1;
+    margin: 0;
+    width: clamp(190px, 21vw, 330px);
+    overflow: hidden;
+  }
+  #pip figcaption { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px 3px 10px; font-weight: 650; }
+  #pip-close { min-height: 29px; min-width: 29px; padding: 0; font-size: 19px; line-height: 1; }
+  #pip-view { aspect-ratio: 16 / 10; background: var(--background); }
+  #pip-view canvas { display: block; width: 100%; height: 100%; }
+  #pip-value { display: block; padding: 4px 10px; font-size: 12px; }
+  @media (max-width: 850px) {
+    .flight-hud, #pip { right: 10px; }
+    #pip { top: calc(var(--heading-top, 80px) + 90px); width: clamp(148px, 37vw, 235px); }
+  }
+  @media (max-height: 640px) {
+    #pip-view { max-height: 95px; }
+    #pad { width: 68px; height: 68px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.js",
+  "three/addons/": "./vendor/three/jsm/"
+} }
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="identity"><span class="wordmark">NASTAS <b>FSTC</b></span><span class="product">Helicopter Systems</span></div>
+  <div class="top-controls">
+    <div id="acSel" role="group" aria-label="Aircraft">
+      <button data-ac="uh60" class="on" aria-pressed="true">UH-60 Black Hawk</button>
+      <button data-ac="r44" aria-pressed="false">Robinson R44</button>
+    </div>
+    <button id="fullscreen" aria-pressed="false" hidden>Enter fullscreen</button>
+  </div>
+</header>
+<main class="workspace">
+  <section class="viewer" aria-labelledby="title">
+    <div id="app"></div>
+    <header class="view-heading"><h1 id="title">Helicopter Drive System</h1><p id="subtitle"></p></header>
+    <div id="freeHint"><strong>Free camera</strong> · Drag to look · Hold right mouse button to move forward or middle to move back · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move ·
+      <kbd>E</kbd>/<kbd>Q</kbd> up/down · <kbd>Shift</kbd> fast · wheel: speed <b>4.0</b> · <kbd>F</kbd> exit<br>
+      🎮 controller: left stick move · right stick look · RT/LT up/down · RB/LB speed · A boost · Y exit</div>
+    <div class="bottom-hud">
+      <details class="briefing hud-panel">
+        <summary>View briefing</summary>
+        <p id="caption"></p>
+      </details>
+      <div class="toolbar hud-panel" role="group" aria-label="Model controls">
+        <button id="play">❚❚ Pause</button>
+        <label class="speed">Playback <input id="speed" type="range" min="-2" max="4" step="0.25" value="0"> <output id="speedOut" for="speed"></output></label>
+        <button id="free" title="Free camera (F)" aria-pressed="false">Free camera</button>
+        <label class="toggle"><input id="lbls" type="checkbox" checked> Labels</label>
+      </div>
+    </div>
+  </section>
+  <details class="views hud-panel" open>
+    <summary>System views</summary>
+    <nav id="shots" aria-label="System views"></nav>
+  </details>
+  <section id="ctrl" class="flight-hud hud-panel" aria-label="Pilot controls">
+    <div class="flight-axis">
+      <span id="cyclic-label">Cyclic</span>
+      <canvas id="pad" width="208" height="208" tabindex="0" role="group" aria-labelledby="cyclic-label" aria-describedby="cyclic-help"></canvas>
+      <span class="sr-only" id="cyclic-help">Drag or use the arrow keys. Press Home to center.</span>
+    </div>
+    <div class="flight-sliders">
+      <label for="coll">Collective <output id="coll-value" for="coll"></output></label>
+      <input id="coll" type="range" min="0" max="1" step="0.01" value="0.35">
+      <label for="ped">Pedals <output id="ped-value" for="ped"></output></label>
+      <input id="ped" type="range" min="-1" max="1" step="0.01" value="0">
+      <label for="kts" class="uh60only">Airspeed <output id="kts-value" for="kts"></output></label>
+      <input id="kts" class="uh60only" type="range" min="0" max="150" step="1" value="0">
+    </div>
+    <div class="flight-actions">
+      <button id="center">Center</button>
+      <label class="toggle uh60only"><input id="mix" type="checkbox" checked> Mixing</label>
+      <button id="demo" class="uh60only">Auto demo</button>
+    </div>
+  </section>
+  <figure id="pip" class="hud-panel" hidden>
+    <figcaption><span id="pip-title"></span><button id="pip-close" aria-label="Close close-up">&times;</button></figcaption>
+    <div id="pip-view"></div>
+    <output id="pip-value" aria-live="off"></output>
+  </figure>
+</main>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
