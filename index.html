@@ -141,7 +141,7 @@
     .top-controls { gap: 5px; }
     .toolbar { gap: 4px 8px; }
   }
-.flight-hud {
+  .flight-hud {
     position: fixed;
     right: 18px;
     bottom: var(--footer-space, 100px);
@@ -163,25 +163,35 @@
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
   #pip {
     position: fixed;
-    top: var(--heading-top, 80px);
+    top: var(--pip-top, 145px);
     right: 18px;
     z-index: 1;
     margin: 0;
-    width: clamp(190px, 21vw, 330px);
+    width: clamp(380px, 42vw, 660px);
     overflow: hidden;
   }
   #pip figcaption { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px 3px 10px; font-weight: 650; }
   #pip-close { min-height: 29px; min-width: 29px; padding: 0; font-size: 19px; line-height: 1; }
-  #pip-view { aspect-ratio: 16 / 10; background: var(--background); }
+  #pip-view { aspect-ratio: 16 / 10; max-height: max(56px, var(--pip-height, 300px)); background: var(--background); }
   #pip-view canvas { display: block; width: 100%; height: 100%; }
   #pip-value { display: block; padding: 4px 10px; font-size: 12px; }
   @media (max-width: 850px) {
     .flight-hud, #pip { right: 10px; }
-    #pip { top: calc(var(--heading-top, 80px) + 90px); width: clamp(148px, 37vw, 235px); }
+    #pip { width: min(calc(100vw - 20px), clamp(296px, 74vw, 470px)); }
   }
   @media (max-height: 640px) {
-    #pip-view { max-height: 95px; }
     #pad { width: 68px; height: 68px; }
+  }
+  @media (max-width: 460px) and (max-height: 640px) {
+    .flight-sliders { grid-template-columns: auto minmax(45px, 1fr); column-gap: 8px; }
+    .flight-sliders label { display: grid; gap: 0; }
+    .flight-hud { gap: 4px 10px; padding: 6px 8px; }
+    #pip-view { max-height: max(36px, calc(var(--pip-height, 300px) + 22px)); }
+    #pip-value { position: absolute; bottom: 0; background: var(--background); padding: 1px 5px; }
+  }
+  @media (orientation: landscape) and (max-height: 540px) {
+    #pip { left: 10px; right: auto; top: calc(var(--heading-top, 80px) + 42px); width: min(47vw, 380px); }
+    #pip-view { max-height: max(56px, calc(100dvh - var(--heading-top, 80px) - var(--footer-space, 100px) - 112px)); }
   }
 </style>
 <script type="importmap">
@@ -218,7 +228,7 @@
         <button id="play">❚❚ Pause</button>
         <label class="speed">Playback <input id="speed" type="range" min="-2" max="4" step="0.25" value="0"> <output id="speedOut" for="speed"></output></label>
         <button id="free" title="Free camera (F)" aria-pressed="false">Free camera</button>
-        <label class="toggle"><input id="lbls" type="checkbox" checked> Labels</label>
+        <label class="toggle"><input id="lbls" type="checkbox"> Labels</label>
       </div>
     </div>
   </section>

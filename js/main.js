@@ -20,12 +20,23 @@ if (compactHud.matches) viewPanel.open = false;
 compactHud.addEventListener('change', () => { viewPanel.open = !compactHud.matches; });
 const topbar = document.querySelector('.topbar');
 const bottomHud = document.querySelector('.bottom-hud');
+const viewHeading = document.querySelector('.view-heading');
+const flightHud = document.getElementById('ctrl');
 const hudInsets = new ResizeObserver(() => {
   document.body.style.setProperty('--heading-top', topbar.offsetHeight + 12 + 'px');
   document.body.style.setProperty('--footer-space', bottomHud.offsetHeight + 24 + 'px');
+  const flightTop = flightHud.getBoundingClientRect().top;
+  const headingBottom = Math.ceil(viewHeading.getBoundingClientRect().bottom);
+  const pipTop = Math.max(topbar.offsetHeight + 10, Math.min(headingBottom + 10, flightTop - 130));
+  document.body.style.setProperty('--pip-top', pipTop + 'px');
+  document.body.style.setProperty('--pip-height', Math.floor(flightTop - pipTop - 74) + 'px');
 });
 hudInsets.observe(topbar);
 hudInsets.observe(bottomHud);
+hudInsets.observe(viewHeading);
+hudInsets.observe(flightHud);
+// The HUD can move on resize even if its elements keep the same dimensions.
+hudInsets.observe(document.getElementById('app'));
 
 const fullscreenButton = document.getElementById('fullscreen');
 if (document.fullscreenEnabled) {
@@ -223,7 +234,8 @@ const ROTOR_KEYS = new Set(['hub', 'elasto', 'damper', 'bifilar', 'pitchLink', '
 const TAIL_KEYS = new Set(['igb', 'pylonShaft', 'tgb', 'trotor', 'pcb', 'trservo', 'stab']);
 const COCKPIT_KEYS = new Set(['cyclic', 'collective', 'pedals', 'mixing', 'column', 'cables', 'assist', 'copilot']);
 let labelGroup = 'drive';
-let labelsOn = true;
+const labelsToggle = document.getElementById('lbls');
+let labelsOn = labelsToggle.checked;
 function applyLabels() {
   const groupOf = (k) => (k.startsWith('e_') ? 'engine' : k.startsWith('r44e_') ? 'r44eng' : k.startsWith('r44') ? 'r44' : ROTOR_KEYS.has(k) ? 'rotor' : TAIL_KEYS.has(k) ? 'tail' : COCKPIT_KEYS.has(k) ? 'cockpit' : 'drive');
   labelObjs.forEach((o) => (o.visible = labelsOn && labelGroup !== 'none' && groupOf(o.userData.key) === labelGroup));
@@ -804,7 +816,7 @@ function renderPip() {
       : 'Cyclic pitch ±' + R2D(state.cyclicAmp).toFixed(1) + '°';
   }
 }
-document.getElementById('lbls').onchange = (e) => { labelsOn = e.target.checked; applyLabels(); };
+labelsToggle.onchange = (e) => { labelsOn = e.target.checked; applyLabels(); };
 // ---------- loop ----------
 const clock = new THREE.Clock();
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
