@@ -601,7 +601,7 @@ export function buildRotorHead(root) {
 
   return {
     head, anchors, update, state: st, jointPairs, servos,
-    setTpp(v) { showTpp = v; tppG.visible = v; },
+    setTpp(v) { tppG.visible = v; },
     discPick,
     discGrabbable: () => tppG.visible,
     discRadius: R.tip - 0.6,
